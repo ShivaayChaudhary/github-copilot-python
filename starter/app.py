@@ -3,6 +3,12 @@ import sudoku_logic
 
 app = Flask(__name__)
 
+DIFFICULTY_TO_CLUES = {
+    'easy': 40,
+    'medium': 34,
+    'hard': 28
+}
+
 # Keep a simple in-memory store for current puzzle and solution
 CURRENT = {
     'puzzle': None,
@@ -15,7 +21,15 @@ def index():
 
 @app.route('/new')
 def new_game():
-    clues = int(request.args.get('clues', 35))
+    difficulty = request.args.get('difficulty', '').lower()
+    clues_arg = request.args.get('clues')
+    if difficulty in DIFFICULTY_TO_CLUES:
+        clues = DIFFICULTY_TO_CLUES[difficulty]
+    else:
+        try:
+            clues = int(clues_arg) if clues_arg is not None else 35
+        except ValueError:
+            clues = 35
     puzzle, solution = sudoku_logic.generate_puzzle(clues)
     CURRENT['puzzle'] = puzzle
     CURRENT['solution'] = solution

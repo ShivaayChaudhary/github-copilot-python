@@ -49,10 +49,12 @@ def test_count_solutions_and_unique_solution_detection():
 
 
 def test_generated_puzzles_have_unique_solutions():
-    for clues in (28, 35):
+    for clues in (28, 34, 40):
         puzzle, _ = sl.generate_puzzle(clues=clues)
         assert sl.has_unique_solution(puzzle) is True
         assert sl.count_solutions(puzzle) == 1
+        non_empty = sum(1 for r in puzzle for c in r if c != sl.EMPTY)
+        assert non_empty == clues
 
 
 def test_sudoku_validity_behavior():

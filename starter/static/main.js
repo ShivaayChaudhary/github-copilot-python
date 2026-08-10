@@ -48,7 +48,10 @@ function renderPuzzle(puz) {
 }
 
 async function newGame() {
-  const res = await fetch('/new');
+  const difficultyEl = document.getElementById('difficulty');
+  const difficulty = difficultyEl ? difficultyEl.value : '';
+  const query = difficulty ? `?difficulty=${encodeURIComponent(difficulty)}` : '';
+  const res = await fetch(`/new${query}`);
   const data = await res.json();
   renderPuzzle(data.puzzle);
   document.getElementById('message').innerText = '';
