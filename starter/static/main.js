@@ -6,6 +6,8 @@ let elapsedSeconds = 0;
 let solution = null;
 let hintCount = 0;
 let gameSaved = false;
+const LEADERBOARD_STORAGE_KEY = 'sudoku_leaderboard_v1';
+const LEADERBOARD_MAX_ENTRIES = 10;
 
 function formatTime(seconds) {
   const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -210,29 +212,57 @@ async function useHint(){
   document.getElementById('message').innerText = '';
 }
 
+function getLeaderboardEntries(){
+  try {
+    const stored = localStorage.getItem(LEADERBOARD_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch (err) {
+    return [];
+  }
+}
+
+function setLeaderboardEntries(entries){
+  try {
+    localStorage.setItem(LEADERBOARD_STORAGE_KEY, JSON.stringify(entries));
+  } catch (err) {
+    console.warn('Unable to save leaderboard to localStorage', err);
+  }
+}
+
 function saveScore(){
   const nameEl = document.getElementById('player-name');
-  const difficulty = (document.getElementById('difficulty')||{}).value || '';
+  const difficulty = (document.getElementById('difficulty') || {}).value || '';
   const name = (nameEl && nameEl.value.trim()) || 'Anonymous';
-  const entry = { name, time: elapsedSeconds, difficulty, hints: hintCount, ts: Date.now() };
-  const key = 'sudoku_leaderboard_v1';
-  let board = [];
-  try{ board = JSON.parse(localStorage.getItem(key) || '[]'); }catch(e){ board = []; }
+  const entry = {
+    name,
+    time: elapsedSeconds,
+    difficulty,
+    hints: hintCount,
+    ts: Date.now()
+  };
+
+  const board = getLeaderboardEntries();
   board.push(entry);
-  board.sort((a,b)=>a.time - b.time);
-  board = board.slice(0,10);
-  localStorage.setItem(key, JSON.stringify(board));
+  board.sort((a, b) => a.time - b.time || a.ts - b.ts);
+  const topEntries = board.slice(0, LEADERBOARD_MAX_ENTRIES);
+  setLeaderboardEntries(topEntries);
   renderLeaderboard();
 }
 
 function renderLeaderboard(){
-  const key = 'sudoku_leaderboard_v1';
-  let board = [];
-  try{ board = JSON.parse(localStorage.getItem(key) || '[]'); }catch(e){ board = []; }
+  const entries = getLeaderboardEntries();
   const list = document.getElementById('leaderboard-list');
-  if(!list) return;
+  if (!list) return;
   list.innerHTML = '';
-  for(const item of board){
+
+  if (entries.length === 0) {
+    const emptyMessage = document.createElement('li');
+    emptyMessage.innerText = 'No completed games yet.';
+    list.appendChild(emptyMessage);
+    return;
+  }
+
+  for (const item of entries) {
     const li = document.createElement('li');
     li.innerText = `${item.name} — ${formatTime(item.time)} — ${item.difficulty} — hints: ${item.hints}`;
     list.appendChild(li);
