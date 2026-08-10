@@ -35,3 +35,31 @@ def test_remove_cells_and_generate_puzzle():
     assert all(all(c != sl.EMPTY for c in row) for row in solution)
     non_empty2 = sum(1 for r in puzzle for c in r if c != sl.EMPTY)
     assert non_empty2 == 28
+
+
+def test_count_solutions_and_unique_solution_detection():
+    empty_board = sl.create_empty_board()
+    assert sl.count_solutions(empty_board) > 1
+    assert sl.has_unique_solution(empty_board) is False
+
+    board = sl.create_empty_board()
+    assert sl.fill_board(board) is True
+    assert sl.count_solutions(board) == 1
+    assert sl.has_unique_solution(board) is True
+
+
+def test_generated_puzzles_have_unique_solutions():
+    for clues in (28, 35):
+        puzzle, _ = sl.generate_puzzle(clues=clues)
+        assert sl.has_unique_solution(puzzle) is True
+        assert sl.count_solutions(puzzle) == 1
+
+
+def test_sudoku_validity_behavior():
+    board = sl.create_empty_board()
+    board[0][0] = 1
+    assert sl.is_safe(board, 0, 1, 1) is False
+    assert sl.is_safe(board, 0, 1, 2) is True
+
+    board[0][1] = 2
+    assert sl.is_safe(board, 0, 2, 2) is False
