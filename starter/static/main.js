@@ -118,16 +118,19 @@ async function checkSolution() {
   const incorrect = new Set(data.incorrect.map(x => x[0]*SIZE + x[1]));
   for (let idx = 0; idx < inputs.length; idx++) {
     const inp = inputs[idx];
-    if (inp.disabled) continue;
+    if (inp.disabled) continue; // prefilled/locked cells
     inp.className = 'sudoku-cell';
     if (incorrect.has(idx)) {
       inp.className = 'sudoku-cell incorrect';
     }
   }
-  if (incorrect.size === 0) {
+  if (data.complete) {
     stopTimer();
     msg.style.color = '#388e3c';
     msg.innerText = 'Congratulations! You solved it!';
+  } else if (incorrect.size === 0) {
+    msg.style.color = '#1976d2';
+    msg.innerText = 'All entered cells are correct; puzzle incomplete.';
   } else {
     msg.style.color = '#d32f2f';
     msg.innerText = 'Some cells are incorrect.';

@@ -40,14 +40,31 @@ def check_solution():
     data = request.json
     board = data.get('board')
     solution = CURRENT.get('solution')
-    if solution is None:
+    puzzle = CURRENT.get('puzzle')
+    if solution is None or puzzle is None:
         return jsonify({'error': 'No game in progress'}), 400
+
     incorrect = []
+    has_empty = False
+    # Only validate user-editable cells (where puzzle has EMPTY)
     for i in range(sudoku_logic.SIZE):
         for j in range(sudoku_logic.SIZE):
-            if board[i][j] != solution[i][j]:
+            if puzzle[i][j] != sudoku_logic.EMPTY:
+                # prefilled/locked cell - ignore
+                continue
+            # safe-guard: missing board rows/cols treated as empty
+            try:
+                v = board[i][j]
+            except Exception:
+                v = sudoku_logic.EMPTY
+            if not v:
+                has_empty = True
+                continue
+            if v != solution[i][j]:
                 incorrect.append([i, j])
-    return jsonify({'incorrect': incorrect})
+
+    complete = (len(incorrect) == 0 and not has_empty)
+    return jsonify({'incorrect': incorrect, 'complete': complete})
 
 if __name__ == '__main__':
     app.run(debug=True)

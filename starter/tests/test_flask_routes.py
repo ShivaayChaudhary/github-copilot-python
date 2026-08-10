@@ -58,8 +58,38 @@ def test_check_correct_and_incorrect(client):
     assert resp.status_code == 200
     data = resp.get_json()
     assert data.get('incorrect') == []
+    assert data.get('complete') is True
+
+    # Make a copy and leave some empties - empty cells should not be marked incorrect
     board = [row[:] for row in solution]
-    board[0][0] = (board[0][0] % 9) + 1
+    # find a user-editable cell from CURRENT['puzzle'] (where puzzle == 0)
+    puzzle = CURRENT['puzzle']
+    empty_i = empty_j = None
+    for i in range(9):
+        for j in range(9):
+            if puzzle[i][j] == 0:
+                board[i][j] = 0
+                empty_i, empty_j = i, j
+                break
+        if empty_i is not None:
+            break
     resp = client.post('/check', json={'board': board})
     data = resp.get_json()
-    assert len(data.get('incorrect')) >= 1
+    # that empty should not be reported as incorrect
+    assert data.get('complete') is False
+    assert [empty_i, empty_j] not in data.get('incorrect')
+
+    # Now modify a user-editable cell to an incorrect value and ensure it's reported
+    board = [row[:] for row in solution]
+    for i in range(9):
+        for j in range(9):
+            if puzzle[i][j] == 0:
+                board[i][j] = (board[i][j] % 9) + 1
+                wrong_i, wrong_j = i, j
+                break
+        else:
+            continue
+        break
+    resp = client.post('/check', json={'board': board})
+    data = resp.get_json()
+    assert [wrong_i, wrong_j] in data.get('incorrect')
