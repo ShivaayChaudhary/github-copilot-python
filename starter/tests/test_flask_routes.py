@@ -93,3 +93,15 @@ def test_check_correct_and_incorrect(client):
     resp = client.post('/check', json={'board': board})
     data = resp.get_json()
     assert [wrong_i, wrong_j] in data.get('incorrect')
+
+
+def test_solution_endpoint(client):
+    resp = client.get('/new?clues=35')
+    assert resp.status_code == 200
+    sol_resp = client.get('/solution')
+    assert sol_resp.status_code == 200
+    sol = sol_resp.get_json().get('solution')
+    assert sol is not None
+    # solution should match CURRENT['solution']
+    from app import CURRENT
+    assert sol == CURRENT['solution']

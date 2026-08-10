@@ -66,5 +66,13 @@ def check_solution():
     complete = (len(incorrect) == 0 and not has_empty)
     return jsonify({'incorrect': incorrect, 'complete': complete})
 
+
+@app.route('/solution')
+def get_solution():
+    solution = CURRENT.get('solution')
+    if solution is None:
+        return jsonify({'error': 'No game in progress'}), 400
+    return jsonify({'solution': solution})
+
 if __name__ == '__main__':
     app.run(debug=True)
